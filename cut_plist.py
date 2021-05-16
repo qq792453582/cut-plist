@@ -1,5 +1,6 @@
 import plistlib
 import os
+import numpy as np
 from PIL import Image
 
 
@@ -26,7 +27,15 @@ def cut_plist(output, texture, save_dir):
         if rotated:
             width, height = height, width
         box = (x, y, x + width, y + height)
-        sprite = texture.crop(box)
+
+        newSize = np.array([width, height])
+        offset = np.array(to_list(data["spriteOffset"])).astype("float")*(-1,1)
+        srcSize = np.array(to_list(data["spriteSourceSize"])).astype("float")
+        offset = ((newSize-srcSize)/2+offset).astype("int")
+
+        sprite = texture.crop(box).crop((*offset,*(offset+srcSize)))
+
+
         if rotated:
             sprite = sprite.transpose(Image.ROTATE_90)
         save_path = os.path.splitext(os.path.join(save_dir, key))[0] + ".png"
